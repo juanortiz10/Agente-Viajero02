@@ -9,7 +9,9 @@ import java.util.HashMap;
 public class Model {
   StringBuilder sb = new StringBuilder();
   int counter=0;
+  int idxtext = -1;
   int[][] array;
+  ArrayList<ArrayList> matrix;
   int[][] arrayRecovery;
   int[]suma;
   ArrayList road= new ArrayList<Integer>();
@@ -17,49 +19,87 @@ public class Model {
   HashMap map= new HashMap<Integer,Integer>();
   //This method reads the file .txt, then is saved in a String Builder
   public void readDocument(){
-      File archivo = null;
-      FileReader fr = null;
       BufferedReader br = null;
- 
-      try {
-         archivo = new File ("../ejemplo.txt");
-         fr = new FileReader (archivo);
-         br = new BufferedReader(fr);
-         String linea;
-      
-         while((linea=br.readLine())!=null){
-            sb.append(linea+" ");
-            counter++;
-         }
+    
+    try {
+     
+     String linea;
+     
+     br = new BufferedReader(new FileReader("gr17.tsp"));
+     
+     while ((linea= br.readLine()) != null) {
+      if (linea.compareTo("EDGE_WEIGHT_SECTION")==0){
+        idxtext = counter+1;
       }
-      catch(Exception e){
-      }finally{
-         try{                    
-            if( null != fr ){   
-               fr.close();     
-            }                  
-         }catch (Exception e2){}
+      if (linea.compareTo("EOF")==0){
+        break;
       }
+      sb.append(linea+"\n");
+      counter++;
+    }
+    
+  } catch (Exception e) {
+   e.printStackTrace();
+ } finally {
+   try {
+    if (br != null)br.close();
+  } catch (Exception ex) {
+    ex.printStackTrace();
+  }
+  String[] values = sb.toString().split("\n");
+  
+  ArrayList<String> list = new ArrayList<>();
+  
+  for (int i = idxtext; i < values.length; i++) {
+    list.add(values[i]);
+  }
+  
+  matrix = new ArrayList<>();
+  
+  ArrayList<Integer> toinsert= new ArrayList<>();
+  
+  for (String string : list) {
+    String[] temp=string.split("\\s+");
+    
+    for (String inner : temp) {
+      if(inner.isEmpty())
+        continue;
+      Integer number = Integer.parseInt(inner);
+      if(number==0){
+        
+        toinsert.add(number);
+        matrix.add(toinsert);
+        toinsert = new ArrayList<>();
+      }else{
+        toinsert.add(number);
+      }
+    }
+  }
+  
+  for (int i = 0; i < matrix.size(); i++) {
+    for (int j = 0; j < matrix.size(); j++) {
+      if (j>=i){
+        Integer number = (Integer)matrix.get(j).get(i);
+        if(number!=0)
+          matrix.get(i).add(number);
+      }
+    }
+  }
+  
+  
+}
   }
   //This method saves the file's information in a matrix
-  public void generateInformation(){
-      int j=0,k=0;
-      array= new int[counter][counter];
-      arrayRecovery=new int[counter][counter];
-      String[] lines = sb.toString().split("\\s");
-        for(int i=0; i<lines.length; i++){
-            if((i+1)%6==0){
-               array[j][k]=Integer.parseInt(lines[i]);
-               arrayRecovery[j][k]=Integer.parseInt(lines[i]);
-               j++;  
-               k=0;
-            }else{
-              array[j][k]=Integer.parseInt(lines[i]);
-              arrayRecovery[j][k]=Integer.parseInt(lines[i]);
-              k++;
-            }
-        }        
-    }
+  public void generateArray(){
+      array= new int[matrix.size()][matrix.size()];
+      arrayRecovery=new int[matrix.size()][matrix.size()];
+      for(int i =0; i < matrix.size(); i++){
+        for(int j =0; j <matrix.size(); j++){
+            array[i][j]= (Integer)matrix.get(i).get(j);
+            arrayRecovery[i][j]= (Integer)matrix.get(i).get(j);
+        }
+      }
+}
   
   //This method chooses the first road which is going to start the heuristic
   public int generateFirstRoad(){
